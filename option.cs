@@ -207,6 +207,9 @@ namespace Optional
                 return Option<TResult>.None;
             }
         }
+
+        // TODO: override ToString() (similar to Rust's Debug and Display traits) to print out Some(T) or None
+        //public override string ToString() => throw new NotImplementedException();
     }
 
     // I want to just express it as Some(T) instead of Option.Some(T):
@@ -219,6 +222,8 @@ namespace Optional
     // for unit-test'ish code to test out (demonstrate) Option<T> usages and patterns:
     class OptionTest
     {
+        // Minor explanation: I have a habbit of declaring my variables as "possible_X" (yes, like Hungarian notation, and yes,
+        // my variables are Rust-like snake_case) to indicate that it's an Option<T> type.  This is just a personal preference.
         public static void Test()
         {
             // note that we're using `using static Optional.Option;` and `using static Optional.OptionExtensions;` so that
@@ -228,9 +233,26 @@ namespace Optional
 
             // type inference
             var possible_type_inferred_value = Some(42);
-            var possible_type_inferred_value2 = None<bool>();   // you MUST specify the type for None() to work (obvious, but )
+            var possible_type_inferred_value_for_none = None<bool>();   // you MUST specify the type for None() to work (obvious, but )
+            var possible_tuple = Some((answer: 42, motto: "Don't Panic!", favor_vogon_poems: false));
+            Console.WriteLine($"Type inference: should print '42' here: {possible_type_inferred_value.Match(value => value, () => -1)}");
+            Console.WriteLine($"Possible_Tuple: Answer={possible_tuple.Match(value => value.answer, () => -1)}, Motto={possible_tuple.Match(value => value.motto, () => "No value")}, Favor Vogon Poems={possible_tuple.Match(value => value.favor_vogon_poems, () => false)} ");
+
+            // using Select() to iterate over an Option<T> as if it was a collection
+            Console.WriteLine("Select() over Option<T>: should print '42' here");
+            foreach(var v in possible_type_inferred_value.Select(value => value))
+            {
+                Console.WriteLine(v);
+            }
+            // iterating over a None<T> should not execute the lambda body of foreach()
+            Console.WriteLine("Select() over None<T>: should NOT throw exception...  The beauty of no more NullException!!!!");
+            foreach(var v in possible_type_inferred_value_for_none.Select(value => value))
+            {
+                throw new Exception("This should not be reached");
+            }
 
             // pattern matching (void return type and non-void return type)
+            Console.WriteLine("Pattern matching: should print '42' here");
             possible_int.Match(value => Console.WriteLine(value), () => Console.WriteLine("No value"));
             var match_result = possible_int.Match(value => value, () => -1);    // pattern matching (non-void return type)
 
@@ -252,7 +274,7 @@ namespace Optional
             Console.WriteLine("Unwrapping: should print '42' here");
             var v_some = possible_int.Unwrap(); // will throw if it is none
             Console.WriteLine(v_some);
-            Console.WriteLine("Unwrapping: should print 'No value' here (exception)");
+            Console.WriteLine("Unwrapping: should print 'Option does not have a value' here (exception InvalidOperationException thrown)");
             try
             {
                 var v_none = possible_int2.Unwrap(); // this SHOULD throw
@@ -271,7 +293,7 @@ namespace Optional
                 Console.WriteLine(v_int);
             }
             // Note the type inferences on Select<Option<int>, Option<int>> here and Select() iterates over the Option<int>
-            Console.WriteLine("Enumeration (collection of Option<T>): should print '2 (mapped)'; 'No value (mapped)'; '4 (mapped)' here");  
+            Console.WriteLine("Enumeration (collection of Option<T>): should print '2 (mapped)'; 'No value (mapped)'; '4 (mapped)' here");
             foreach (Option<int> possible_v_int in vs.Select(possible_val_t => possible_val_t.Match(val_t => Some(val_t * 2), () => None<int>())))
             {
                 Console.WriteLine(possible_v_int.Match(
