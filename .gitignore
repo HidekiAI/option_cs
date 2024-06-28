@@ -1,0 +1,10 @@
+
+obj/
+*.bin
+*.obj
+*.dll
+*.exe
+debug/
+release/
+bin/
+
