@@ -235,18 +235,24 @@ namespace Optional
             var match_result = possible_int.Match(value => value, () => -1);    // pattern matching (non-void return type)
 
             // mapping
-            possible_int.Map(value =>
-                value * 2).Match(
+            Console.WriteLine("Mapping: should print '84' (2 * 42) here");
+            possible_int.Map(value => value * 2)
+                .Match(
                     value => Console.WriteLine(value),  // Some
                     () => Console.WriteLine("No value"));   // None
 
             // flattening
-            possible_int.Flatten().Match(
-                value => Console.WriteLine(value),  // Some
-                () => Console.WriteLine("No value"));   // None
+            Console.WriteLine("Flattening: should print '42' here");
+            possible_int.Flatten()
+                .Match(
+                    value => Console.WriteLine(value),  // Some
+                    () => Console.WriteLine("No value"));   // None
 
             // unwrapping
+            Console.WriteLine("Unwrapping: should print '42' here");
             var v_some = possible_int.Unwrap(); // will throw if it is none
+            Console.WriteLine(v_some);
+            Console.WriteLine("Unwrapping: should print 'No value' here (exception)");
             try
             {
                 var v_none = possible_int2.Unwrap(); // this SHOULD throw
@@ -259,22 +265,28 @@ namespace Optional
             // enumeration
             var vs = new Option<int>[] { Some(1), None<int>(), Some(2) };
             // declaring `int` explicitly instead of `var v` to demonstrate expected type, but usually you want to do `foreach(var v...)`
+            Console.WriteLine("Enumeration: should print '1' and '2' here");
             foreach (int v_int in vs.Flatten())
             {
                 Console.WriteLine(v_int);
             }
-            // Note the type inferences on Select<Option<int>, Option<int>> here:
-            foreach (Option<int> possible_v_int in vs.Select(possible_val_t => possible_int.Match(val_t => Some(val_t * 2), () => None<int>())))
+            // Note the type inferences on Select<Option<int>, Option<int>> here and Select() iterates over the Option<int>
+            Console.WriteLine("Enumeration (collection of Option<T>): should print '2 (mapped)'; 'No value (mapped)'; '4 (mapped)' here");  
+            foreach (Option<int> possible_v_int in vs.Select(possible_val_t => possible_val_t.Match(val_t => Some(val_t * 2), () => None<int>())))
             {
                 Console.WriteLine(possible_v_int.Match(
                     value => value.ToString(),
                     () => "No value") + " (mapped)");
             }
-            foreach (int v_int in vs.Select(possible_val_t => possible_int.Match(val_t => Some(val_t * 2), () => None<int>())).Flatten())
+            // Similar to above, but here, we call Flatten() so that Select() iterates over the int
+            Console.WriteLine("Enumeration (collection flattened Select() results): should print '2' and '4' here");
+            foreach (int v_int in vs.Select(possible_val_t => possible_val_t.Match(val_t => Some(val_t * 2), () => None<int>())).Flatten())
             {
                 Console.WriteLine(v_int);
             }
-            foreach (int v_int in vs.SelectMany(possible_val_t => possible_int.Match(val_t => Some(val_t * 2), () => None<int>())))
+            // Using SelectMany() to flatten the implicitly
+            Console.WriteLine("Enumeration (flattened using SelctMany): should print '2' and '4' here (SelectMany())");
+            foreach (int v_int in vs.SelectMany(possible_val_t => possible_val_t.Match(val_t => Some(val_t * 2), () => None<int>())))
             {
                 Console.WriteLine(v_int);
             }
